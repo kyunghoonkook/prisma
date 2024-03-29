@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ? 기호는 일대일 관계
+// [] 기호는 일대다 관계 예 : 유저는 여러개의 포스트를 가질수 있음
+// @Relation(references) 는 다대다 관계
+// 다대일 관계 여러 개의 자식이 하나의 부모를 가리킴 
+// 예: user User @relation(fields: [userId], references: [id])
+// 여기서 userId는 현재 모델에 있는 필드이며 id는 부모 모델 User
+model User {
+  idx Int @id @default(autoincrement())
+  profile Profile?
+  posts Post[]
+  jobs Job[]
+  follower Follows[] @relation("follower")
+  following Follows[] @relation("following")
+}
+
+model Profile {
+  idx Int @id @default(autoincrement())
+  name String
+  email String @unique
+  user User @relation(fields: [userIdx], references: [idx], onUpdate: Cascade, onDelete: Cascade)
+  userIdx Int @unique
+}
+
+model Post {
+  idx Int @id @default(autoincrement())
+  title String
+  description String
+  user User @relation(fields: [userIdx], references: [idx], onUpdate: Cascade, onDelete: Cascade)
+  userIdx Int
+}
+
+model Job {
+  idx Int @id @default(autoincrement())
+  name String
+  users User[]
+}
+
+
+model Follows {
+  followerIdx  Int
+  followingIdx Int
+  follower     User @relation("follower", fields: [followerIdx], references: [idx])
+  following    User @relation("following", fields: [followingIdx], references: [idx])
+
+  @@id([followerIdx, followingIdx])
+}
